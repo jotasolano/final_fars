@@ -12,8 +12,43 @@
 @import "sections/footer.scss";
 
 
-
-.canvas{
-    width:100%;
-    min-height:600px;
+/* Layout */
+html,body{
+	height:100%;
 }
+
+body .viz-container{
+	width:100%;
+	height:100%;
+	overflow:hidden;
+	position:fixed;
+	z-index:0;
+}
+.viz-container .canvas{
+	width:100%;
+	height:100%;
+	overflow:hidden;
+	// background:red;
+	z-index:1;
+}
+
+
+// .canvas{
+//     width:100%;
+//     min-height:600px;
+// }
+
+.animation-timeline{
+	height:100%;
+	position:relative;
+}
+	.animation-timeline .scene{
+		height:100%;
+		width:100%;
+	}
+		.scene .scene-commentary{
+			width:300px;
+			z-index:9999;
+			padding: 20px 15px;
+			color:white;
+		}

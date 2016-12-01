@@ -1,6 +1,7 @@
 // ---- DEPENDENCIES ----
 var d3 = require('d3');
 var crossfilter = require('crossfilter');
+var ScrollMagic = require('scrollmagic');
 
 
 // ---- CONVENTIONS ---- 
@@ -19,8 +20,6 @@ var plot = d3.select('.canvas')
     .append('g')
     .attr('transform','translate(' + margin.left + ',' + margin.top + ')');
 
-//d3.set to hold a unique array of airlines
-// var airlines = d3.set();
 
 // ---- SCALES ----
 var scaleX = d3.scaleTime()
@@ -32,6 +31,7 @@ var scaleColor = d3.scaleOrdinal()
 var scaleY = d3.scaleLinear()
     .domain([0,80])
     .range([height,0]);
+
 
 //---- AXES ----
 var axisX = d3.axisBottom()
@@ -50,44 +50,18 @@ var lineGenerator = d3.line()
     .curve(d3.curveCardinal);
 
 
+var scrollController = new ScrollMagic.Controller({
+        globalSceneOptions:{
+            triggerHook:'onLeave'
+        }
+    });
+
+
+
 // ---- QUEUE ----
 d3.queue()
     .defer(d3.csv, 'data/fars.csv',parse)
     .await(function(err, data){
-
-        // var date1 = new Date();
-        //     date1.setMonth(data[0].date.getMonth() - 1);
-
-
-        // console.log(data);
-
-        // //Mine the data to set the scales
-        // var ext = scaleX.domain( d3.extent(data,function(d){ return d.date; }) );
-
-
-        // scaleColor.domain( airlines.values() );
-        // console.log(d3.extent(data,function(d){ return d.date; }));
-
-        // var _data = data;
-
-        // //Add buttons
-        // d3.select('.btn-group')
-        //     .selectAll('.btn')
-        //     .data( airlines.values() )
-        //     .enter()
-        //     .append('a')
-        //     .html(function(d){ return d; })
-        //     .attr('href','#')
-        //     .attr('class','btn btn-default')
-        //     .style('color','white')
-        //     .style('background',function(d){ return scaleColor(d); })
-        //     .style('border-color','white')
-        //     .on('click',function(d){
-        //         var filteredData = _data.filter(function (el) {
-        //             return(el.airline == d);
-        //         });
-        //         draw(filteredData);
-        //     });
 
 
         //Draw axes
@@ -101,115 +75,66 @@ d3.queue()
         plot.append('path')
             .attr('class', 'average-line');
 
-        draw(data);
+
+    var scene1 = new ScrollMagic.Scene({
+            duration:document.getElementById('scene-1').clientHeight, //controlled by height of the #scene-1 <section>, as specified in CSS
+            triggerElement:'#scene-1',
+            reverse:true //should the scene reverse, scrolling up?
+        })
+        .on('enter',function(){
+            //what happens when we 'enter' the scene i.e. #scene-1 reaches the top of the screen
+            console.log('Enter Scene 1');
+            draw(data, 'fatals');
+            // d3.select('#plot').transition().style('background','red');
+        })
+        .addTo(scrollController);
+
+    var scene2 = new ScrollMagic.Scene({
+            duration:document.getElementById('scene-2').clientHeight, //controlled by height of the #scene-1 <section>, as specified in CSS
+            triggerElement:'#scene-2',
+            reverse:true //should the scene reverse, scrolling up?
+        })
+        .on('enter',function(){
+            console.log('Enter Scene 2');
+            draw(data, 'drunk');
+            // d3.select('#plot').transition().style('background','green');
+        })
+        .addTo(scrollController);
+
+
 
     });
 
-function draw(rows){
+
+function draw(rows, fact){
     rows.sort(function(a, b){
         return (a.date - b.date);
     });
 
-    var accidentsByDate = d3.nest().key(function(d){ return d.date; })
-        .entries(rows);
+    // creating the dimension
+    var dayFilter = crossfilter(rows);
+    var dimDay = dayFilter.dimension(function(d) { return d.date; });
 
-    accidentsByDate.forEach(function(day, i){
-        day.dayAccidents = accidentsByDate[i].values.length;
+    // aggregating one variable
+    var countDays = dimDay.group().reduceSum(function(d) { return d[fact]; });
+
+
+    // var countDays = dimDay.group().reduceSum(function(d) { return d.drunk; }); //the drunk drivers
+
+    // the array
+    var allDimension = countDays.top(Infinity);
+    allDimension.sort(function(a, b){
+        return (a.key - b.key);
     });
 
 
-    // some crossfilter shennaningans
-    var dayFilter = crossfilter(rows);
-    var dimDay = dayFilter.dimension(function(d) { return d.date; });
-    // var countDays = dimDay.group().reduceSum(function(d) { return d.fatals; });
+    // var ext = scaleX.domain( d3.extent(allDrunks,function(d){ return d.key; }) );
+    var extX = scaleX.domain( d3.extent(allDimension,function(d){ return d.key; }) );
 
-
-
-
-    var countDays = dimDay.group().reduceSum(function(d) { return d.drunk; }); //the drunk drivers
-    var allDrunks = countDays.top(Infinity);
-
-    allDrunks.sort(function(a, b){
-        return (a.key - b.key);
-    }); //worst code ever
-
-
-    var ext = scaleX.domain( d3.extent(allDrunks,function(d){ return d.key; }) );
-    console.log(allDrunks);
-
-    // console.log(countDays.top(10)); //gives me top 10 fatalities by date
-
-
-
-
-    // console.log(rows);
-    // console.log(accidentsByDate);
-
-    //Draw dots
-    //UPDATE
-    // var node = plot.selectAll('.circle')
-    //     .data(rows,function(d){return d.id; });
-
-    // //ENTER
-    // var enter = node.enter()
-    //     .append('circle')
-    //     .attr('class', 'circle')
-    //     .attr('r', 0)
-    //     .attr('cx',function(d){ return scaleX(d.travelDate); })
-    //     .attr('cy', function(d){ return scaleY(d.price); })
-    //     .style('fill', function(d) { return scaleColor(d.airline); })
-
-    //     // .on('click',function(d,i){
-    //     //     console.log(d.travelDate.getFullYear());
-    //     // })
-        
-    //     .on('mouseenter', function(d){
-    //         var tooltip = d3.select('.custom-tooltip'),
-    //             year    = d.travelDate.getFullYear(),
-    //             month   = (1 + d.travelDate.getMonth()),
-    //             day     = (1 + d.travelDate.getDay());
-
-    //         tooltip.select('.title')
-    //             .html(d.airline + ', ' + day + '/' + month + '/' + year);
-    //         tooltip.select('.value')
-    //             .html('Price: ' + d.price);
-
-    //         tooltip.transition().style('opacity',1);
-    //         d3.select(this).style('stroke-width','3px');
-    //     })
-
-    //     .on('mousemove',function(d){
-    //         var tooltip = d3.select('.custom-tooltip');
-    //         var xy = d3.mouse( d3.select('.container').node() );
-    //         tooltip
-    //             .style('left',xy[0]+10+'px')
-    //             .style('top',xy[1]+10+'px');
-
-    //     })
-    //     .on('mouseleave',function(d){
-    //         var tooltip = d3.select('.custom-tooltip');
-    //         tooltip.transition().style('opacity',0);
-
-    //         d3.select(this).style('stroke-width','0px');
-    //     });
-        
-    // //UPDATE + ENTER
-    // enter
-    //     .merge(node)
-    //     .transition()
-    //     .duration(1000)
-    //     .attr('r', 3)
-    //     .attr('cx',function(d){ return scaleX(d.travelDate); })
-    //     .attr('cy', function(d){ return scaleY(d.price); })
-    //     .style('fill', function(d) { return scaleColor(d.airline); })
-    //     .style('fill-opacity', 0.8);
-
-    // //EXIT
-    // node.exit().transition().attr("r", 0).remove();
 
     //Draw <path>
     plot.select('.average-line')
-        .datum(allDrunks)
+        .datum(allDimension)
         .transition()
         .duration(1000)
         .attr('d', lineGenerator)
