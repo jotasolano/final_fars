@@ -29,7 +29,7 @@ var scaleColor = d3.scaleOrdinal()
     .range(['#fd6b5a','#03afeb','orange','#06ce98','blue']);
 
 var scaleY = d3.scaleLinear()
-    .domain([0,80])
+    // .domain([0,80])
     .range([height,0]);
 
 
@@ -57,11 +57,12 @@ var scrollController = new ScrollMagic.Controller({
     });
 
 
-
 // ---- QUEUE ----
 d3.queue()
     .defer(d3.csv, 'data/fars.csv',parse)
     .await(function(err, data){
+
+        drawWeather(data);
 
 
         //Draw axes
@@ -82,10 +83,8 @@ d3.queue()
             reverse:true //should the scene reverse, scrolling up?
         })
         .on('enter',function(){
-            //what happens when we 'enter' the scene i.e. #scene-1 reaches the top of the screen
             console.log('Enter Scene 1');
-            draw(data, 'fatals');
-            // d3.select('#plot').transition().style('background','red');
+            draw(data, 'fatals'); //all the fatalities
         })
         .addTo(scrollController);
 
@@ -96,12 +95,9 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 2');
-            draw(data, 'drunk');
-            // d3.select('#plot').transition().style('background','green');
+            draw(data, 'drunk'); //plot drunk drivers
         })
         .addTo(scrollController);
-
-
 
     });
 
@@ -111,6 +107,8 @@ function draw(rows, fact){
         return (a.date - b.date);
     });
 
+    console.log(rows);
+
     // creating the dimension
     var dayFilter = crossfilter(rows);
     var dimDay = dayFilter.dimension(function(d) { return d.date; });
@@ -118,19 +116,23 @@ function draw(rows, fact){
     // aggregating one variable
     var countDays = dimDay.group().reduceSum(function(d) { return d[fact]; });
 
-
-    // var countDays = dimDay.group().reduceSum(function(d) { return d.drunk; }); //the drunk drivers
-
     // the array
     var allDimension = countDays.top(Infinity);
     allDimension.sort(function(a, b){
         return (a.key - b.key);
     });
 
+    // redraw the axes
+    var extX = scaleX.domain( d3.extent(allDimension, function(d){ return d.key; }) );
+    var extY = scaleY.domain( d3.extent(allDimension, function(d) { return d.value; }) );
 
-    // var ext = scaleX.domain( d3.extent(allDrunks,function(d){ return d.key; }) );
-    var extX = scaleX.domain( d3.extent(allDimension,function(d){ return d.key; }) );
+    plot.select('.axis-x')
+    .transition().duration(1500)
+        .call(axisX);
 
+    plot.select('.axis-y')
+        .transition().duration(1500)
+        .call(axisY);
 
     //Draw <path>
     plot.select('.average-line')
@@ -145,6 +147,62 @@ function draw(rows, fact){
 
 }
 
+function drawWeather(rows) {
+
+    rows.sort(function(a, b){
+        return (a.date - b.date);
+    });
+
+    // creating the dimensions
+    var dayFilter = crossfilter(rows);
+    var dimDay = dayFilter.dimension(function(d) { return d.date; });
+    var dimWeather = dayFilter.dimension(function(d) { return d.weather; });
+
+
+    // clear sky
+    dimWeather.filter(1);
+    var group = dimDay.group();
+    var weaClear = group.reduceSum(function(d) { return d.weather; }).top(Infinity);
+    group.dispose();
+
+    weaClear.sort(function(a, b){
+        return (a.key - b.key);
+    });
+
+    dimDay.filter(null);
+    dimWeather.filter(null);
+
+    // rain 
+    dimWeather.filter(2);
+    group = dimDay.group();
+    var weaRain = group.reduceSum(function(d) { return d.weather; }).top(Infinity);
+    group.dispose();
+
+    weaRain.sort(function(a, b){
+        return (a.key.valueOf() - b.key.valueOf());
+    });
+
+    // sleet
+    dimWeather.filter(3);
+    group = dimDay.group();
+    var weaSleet = group.reduceSum(function(d) { return d.weather; }).top(Infinity);
+    group.dispose();
+
+    weaSleet.sort(function(a, b){
+        return (a.key.valueOf() - b.key.valueOf());
+    });
+
+    // snow
+    dimWeather.filter(4);
+    group = dimDay.group();
+    var weaSnow = group.reduceSum(function(d) { return d.weather; }).top(Infinity);
+    group.dispose();
+
+    weaSnow.sort(function(a, b){
+        return (a.key.valueOf() - b.key.valueOf());
+    });
+}
+
 // ---- MISC FUNCTIONS ----
 function parse(d){
 
@@ -155,5 +213,6 @@ function parse(d){
         drunk: +d.DRUNK_DR,
         city: d.CITY,
         county: d.COUNTY,
+        weather: +d.WEATHER,
     };
 }

@@ -17,6 +17,12 @@ html,body{
 	height:100%;
 }
 
+.full-screen {
+  height: 100%; /* makes panels the entire window height */
+}
+
+main { padding: 200px 0 1500px 0; overflow: hidden; }
+
 body .viz-container{
 	width:100%;
 	height:100%;
@@ -26,12 +32,11 @@ body .viz-container{
 }
 .viz-container .canvas{
 	width:100%;
-	height:100%;
+	height:80%;
 	overflow:hidden;
 	// background:red;
 	z-index:1;
 }
-
 
 // .canvas{
 //     width:100%;
