@@ -2,9 +2,10 @@
 var d3 = require('d3');
 var crossfilter = require('crossfilter');
 var ScrollMagic = require('scrollmagic');
+var _ = require('lodash');
 
 
-// ---- CONVENTIONS ---- 
+// ---- CONVENTIONS ---- -------------------------------------------------------------------
 var margin = {top:100,right:100,bottom:100,left:100};
 
 var outerWidth = document.getElementById('canvas').clientWidth,
@@ -12,6 +13,7 @@ var outerWidth = document.getElementById('canvas').clientWidth,
 
 var width = outerWidth - margin.left - margin.right,
     height = outerHeight - margin.top - margin.bottom;
+
 
 var plot = d3.select('.canvas')
     .append('svg')
@@ -21,7 +23,7 @@ var plot = d3.select('.canvas')
     .attr('transform','translate(' + margin.left + ',' + margin.top + ')');
 
 
-// ---- SCALES ----
+// ---- SCALES ----------------------------------------------------------------------------
 var scaleX = d3.scaleTime()
     .range([0,width]);
 
@@ -33,7 +35,7 @@ var scaleY = d3.scaleLinear()
     .range([height,0]);
 
 
-//---- AXES ----
+//---- AXES ------------------------------------------------------------------------------
 var axisX = d3.axisBottom()
     .scale(scaleX)
     .tickSize(-height);
@@ -41,13 +43,15 @@ var axisY = d3.axisLeft()
     .scale(scaleY)
     .tickSize(-width);
 
-//---- GENERATORS ----
+//---- GENERATORS ------------------------------------------------------------------------
 var lineGenerator = d3.line()
     // .x(function(d){ return scaleX(new Date(d.key)); })
     .x(function(d){ return scaleX(d.key); })
     // .y(function(d){ return scaleY(d.dayAccidents); })
     .y(function(d){ return scaleY(d.value); })
     .curve(d3.curveCardinal);
+
+d3.select('.canvas').transition().style('opacity', 0);
 
 
 var scrollController = new ScrollMagic.Controller({
@@ -57,7 +61,7 @@ var scrollController = new ScrollMagic.Controller({
     });
 
 
-// ---- QUEUE ----
+// ---- QUEUE ----------------------------------------------------------------------------
 d3.queue()
     .defer(d3.csv, 'data/fars.csv',parse)
     .await(function(err, data){
@@ -74,8 +78,22 @@ d3.queue()
 
         //Append path
         plot.append('path')
-            .attr('class', 'average-line');
+            .attr('class', 'average-line')
+            .enter();
 
+// ---- SCROLL EVENTS --------------------------------------------------------------------
+    var scene0 = new ScrollMagic.Scene({
+            duration:document.getElementById('scene-0').clientHeight, //controlled by height of the #scene-1 <section>, as specified in CSS
+            triggerElement:'#scene-0',
+            reverse:true //should the scene reverse, scrolling up?
+        })
+        .on('enter',function(){
+            console.log('Enter Scene 0');
+            d3.select('.canvas').transition().style('opacity', 0);
+            // d3.select('.canvas').style('visibility', 'hidden');
+            // document.getElementById("scene-0").innerHTML = "Paragraph changed!";
+        })
+        .addTo(scrollController);
 
     var scene1 = new ScrollMagic.Scene({
             duration:document.getElementById('scene-1').clientHeight, //controlled by height of the #scene-1 <section>, as specified in CSS
@@ -84,6 +102,7 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 1');
+            d3.select('.canvas').transition().style('opacity', 1);
             draw(data, 'fatals'); //all the fatalities
         })
         .addTo(scrollController);
@@ -99,6 +118,18 @@ d3.queue()
         })
         .addTo(scrollController);
 
+
+    var scene3 = new ScrollMagic.Scene({
+            duration:document.getElementById('scene-3').clientHeight, //controlled by height of the #scene-1 <section>, as specified in CSS
+            triggerElement:'#scene-3',
+            reverse:true //should the scene reverse, scrolling up?
+        })
+        .on('enter',function(){
+            console.log('Enter Scene 3');
+            drawWeather(data); //plot drunk drivers
+        })
+        .addTo(scrollController);
+
     });
 
 
@@ -107,7 +138,7 @@ function draw(rows, fact){
         return (a.date - b.date);
     });
 
-    console.log(rows);
+    // console.log(rows);
 
     // creating the dimension
     var dayFilter = crossfilter(rows);
@@ -182,6 +213,9 @@ function drawWeather(rows) {
         return (a.key.valueOf() - b.key.valueOf());
     });
 
+    dimDay.filter(null);
+    dimWeather.filter(null);
+
     // sleet
     dimWeather.filter(3);
     group = dimDay.group();
@@ -192,6 +226,9 @@ function drawWeather(rows) {
         return (a.key.valueOf() - b.key.valueOf());
     });
 
+    dimDay.filter(null);
+    dimWeather.filter(null);
+
     // snow
     dimWeather.filter(4);
     group = dimDay.group();
@@ -201,6 +238,45 @@ function drawWeather(rows) {
     weaSnow.sort(function(a, b){
         return (a.key.valueOf() - b.key.valueOf());
     });
+
+    dimDay.filter(null);
+    dimWeather.filter(null);
+
+    // redraw the axes
+    var extX = scaleX.domain( d3.extent(weaClear, function(d){ return d.key; }) );
+    var extY = scaleY.domain( d3.extent(weaClear, function(d) { return d.value; }) );
+
+    console.log(extX);
+
+    plot.select('.axis-x')
+    .transition().duration(1500)
+        .call(axisX);
+
+    plot.select('.axis-y')
+        .transition().duration(1500)
+        .call(axisY);
+
+    //Draw <path>
+    plot.selectAll('.average-line')
+        .datum(weaClear)
+        .transition()
+        .duration(1000)
+        .attr('d', lineGenerator)
+        .style('fill', 'none')
+        .style('stroke-width', '1px')
+        .style('stroke', 'red');
+
+
+    plot.selectAll('.average-line')
+        .datum(weaSnow)
+        .transition()
+        .duration(1000)
+        .attr('d', lineGenerator)
+        .style('fill', 'none')
+        .style('stroke-width', '1px')
+        .style('stroke', 'green');
+
+
 }
 
 // ---- MISC FUNCTIONS ----

@@ -15,14 +15,9 @@
 /* Layout */
 html,body{
 	height:100%;
+	background:rgb(255,252,248);
+	font-family:'Roboto Condensed',sans-serif;
 }
-
-.full-screen {
-  height: 100%; /* makes panels the entire window height */
-}
-
-main { padding: 200px 0 1500px 0; overflow: hidden; }
-
 body .viz-container{
 	width:100%;
 	height:100%;
@@ -32,17 +27,13 @@ body .viz-container{
 }
 .viz-container .canvas{
 	width:100%;
-	height:80%;
+	height:100%;
 	overflow:hidden;
 	// background:red;
 	z-index:1;
 }
 
-// .canvas{
-//     width:100%;
-//     min-height:600px;
-// }
-
+/* scroll-related */
 .animation-timeline{
 	height:100%;
 	position:relative;
@@ -57,3 +48,4 @@ body .viz-container{
 			padding: 20px 15px;
 			color:white;
 		}
+
