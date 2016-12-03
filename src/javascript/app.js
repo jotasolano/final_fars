@@ -114,6 +114,7 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 2');
+            plot.selectAll('.avg').remove();
             draw(data, 'drunk'); //plot drunk drivers
         })
         .addTo(scrollController);
@@ -126,7 +127,16 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 3');
+            plot.append('path')
+                .attr('class', 'avg average-line2')
+                .enter();
+
+            plot.append('path')
+                .attr('class', 'avg average-line3')
+                .enter();
+
             drawWeather(data); //plot drunk drivers
+
         })
         .addTo(scrollController);
 
@@ -243,6 +253,9 @@ function drawWeather(rows) {
     dimWeather.filter(null);
 
     // redraw the axes
+
+
+    // var extY = 
     var extX = scaleX.domain( d3.extent(weaClear, function(d){ return d.key; }) );
     var extY = scaleY.domain( d3.extent(weaClear, function(d) { return d.value; }) );
 
@@ -266,15 +279,23 @@ function drawWeather(rows) {
         .style('stroke-width', '1px')
         .style('stroke', 'red');
 
-
-    plot.selectAll('.average-line')
-        .datum(weaSnow)
+    plot.selectAll('.average-line2')
+        .datum(weaRain)
         .transition()
         .duration(1000)
         .attr('d', lineGenerator)
         .style('fill', 'none')
         .style('stroke-width', '1px')
         .style('stroke', 'green');
+
+    plot.selectAll('.average-line3')
+        .datum(weaSleet)
+        .transition()
+        .duration(1000)
+        .attr('d', lineGenerator)
+        .style('fill', 'none')
+        .style('stroke-width', '1px')
+        .style('stroke', 'pink');
 
 
 }
