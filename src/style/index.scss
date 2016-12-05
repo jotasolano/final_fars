@@ -10,6 +10,7 @@
 // Sections
 @import "sections/header.scss";
 @import "sections/footer.scss";
+@import "sections/d3.scss";
 
 
 /* Layout */
@@ -26,6 +27,12 @@ body .viz-container{
 	z-index:0;
 	// background-color: #1E1E1E;
 }
+
+.intro{
+	margin-top: 30px;
+	margin-left: 80px;
+}
+
 .viz-container .canvas{
 	width:100%;
 	height:100%;

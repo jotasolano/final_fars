@@ -4,6 +4,7 @@ function parse(d){
     return {
         incident: d.ST_CASE,
         date: new Date(d.YEAR, +d.MONTH-1, d.DAY),  //fix the month offset
+        month: new Date(+d.MONTH-1),
         fatals: +d.FATALS,
         drunk: +d.DRUNK_DR,
         city: d.CITY,
@@ -35,4 +36,4 @@ function join(lookupTable, mainTable, lookupKey, mainKey, select) {
 module.exports = {
     parse: parse,
     join: join
-}
+};

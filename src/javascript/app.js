@@ -10,7 +10,7 @@ var join = utils.join;
 
 
 // ---- CONVENTIONS ---- -------------------------------------------------------------------
-var margin = {top:100,right:100,bottom:100,left:100};
+var margin = {top:40    ,right:40   ,bottom:40 ,left:40 };
 
 var outerWidth = document.getElementById('canvas').clientWidth,
     outerHeight = document.getElementById('canvas').clientHeight;
@@ -24,7 +24,8 @@ var plot = d3.select('.canvas')
     .attr('width',outerWidth)
     .attr('height',outerHeight)
     .append('g')
-    .attr('transform','translate(' + margin.left + ',' + margin.top + ')');
+    .attr('transform','translate(' + margin.left + ',' + margin.top + ')')
+    .classed('test', true);
 
 var selectLine = plot.selectAll('.average-line');
 
@@ -55,7 +56,12 @@ var lineGenerator = d3.line()
     .y(function(d){ return scaleY(d.value); })
     .curve(d3.curveCardinal);
 
-d3.select('.canvas').transition().style('opacity', 0);
+var lineGeneratorMonth = d3.line()
+    .x(function(d){ return scaleX(new Date(2015, d.key-1, 1)); })
+    .y(function(d){ return scaleY(d.value); })
+    .curve(d3.curveCardinal);
+
+d3.select('.canvas').transition().style('opacity', 1);
 
 
 var scrollController = new ScrollMagic.Controller({
@@ -93,7 +99,11 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 0');
-            d3.select('.canvas').transition().style('opacity', 0);
+            d3.select('.canvas').classed('test', true);
+            d3.select('.canvas').transition().style('opacity', 1);
+
+
+
             // d3.select('.canvas').style('visibility', 'hidden');
             // document.getElementById("scene-0").innerHTML = "Paragraph changed!";
         })
@@ -106,7 +116,9 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 1');
+            d3.select('.canvas').classed('test', false);
             d3.select('.canvas').transition().duration(1500).style('opacity', 1);
+            
             draw(data, 'fatals'); //all the fatalities
             plot.selectAll('.average-line')
                 .style('stroke', 'orange');
@@ -182,27 +194,46 @@ function draw(rows, fact, month){
         return (a.date - b.date);
     });
 
-    // console.log(rows);
+    var getTheMonth = d3.timeFormat("%m");
+
+    var getTheMonthName = d3.timeFormat("%B");
 
     // creating the dimension
     var dayFilter = crossfilter(rows);
     var dimDay = dayFilter.dimension(function(d) { return d.date; });
+    
     if (month) {
-       var dimDay = dayFilter.dimension(function(d) { return d.date.getMonth(); });
+       dimDay = dayFilter.dimension(function(d) { return getTheMonth(d.date); });
     }
+
     // aggregating one variable
     var countDays = dimDay.group().reduceSum(function(d) { return d[fact]; });
 
     // the array
     var allDimension = countDays.top(Infinity);
-    console.log(allDimension);
+
     allDimension.sort(function(a, b){
         return (a.key - b.key);
     });
 
+    allDimension.forEach(function(el, i) {
+        el.key = +el.key;
+    });
+
     // redraw the axes
     var extX = scaleX.domain( d3.extent(allDimension, function(d){ return d.key; }) );
-    var extY = scaleY.domain( d3.extent(allDimension, function(d) { return d.value; }) );
+    var extY = scaleY.domain( d3.extent(allDimension, function(d){ return d.value; }) );
+
+    if (month) {
+        scaleX = d3.scaleTime()
+        .domain( [new Date(2015, 0, 1), new Date(2015, 11, 1)] )
+        .range([0,width]);
+
+        axisX = d3.axisBottom()
+            .scale(scaleX)
+            .tickFormat(d3.timeFormat("%B"))
+            .tickSize(-height);
+    }
 
     plot.select('.axis-x')
     .transition().duration(1500)
@@ -220,8 +251,16 @@ function draw(rows, fact, month){
         .attr('d', lineGenerator)
         .style('fill', 'none')
         .style('stroke-width', '1px');
-        // .style('stroke', '#00aa99');
-        // .style('stroke', function(array){ return scaleColor(array[0].values[0].airline); });
+
+    if (month) {
+        plot.select('.average-line')
+            .datum(allDimension)
+            .transition()
+            .duration(1000)
+            .attr('d', lineGeneratorMonth)
+            .style('fill', 'none')
+            .style('stroke-width', '1px');      
+    }
 }
 
 
@@ -236,7 +275,6 @@ function drawWeather(rows) {
     var dayFilter = crossfilter(rows);
     var dimDay = dayFilter.dimension(function(d) { return d.date; });
     var dimWeather = dayFilter.dimension(function(d) { return d.weather; });
-
 
     // clear sky
     dimWeather.filter(1);
@@ -342,8 +380,6 @@ function drawWeather(rows) {
     // redraw the axes
     var extX = scaleX.domain( d3.extent(weaArray, function(d){ return d.key; }) );
     var extY = scaleY.domain( d3.extent(maxWeather) );
-
-    // scaleY.domain([0, 65]);
 
     plot.select('.axis-x')
     .transition().duration(1500)
