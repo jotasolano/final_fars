@@ -3,6 +3,10 @@ var d3 = require('d3');
 var crossfilter = require('crossfilter');
 var ScrollMagic = require('scrollmagic');
 var _ = require('lodash');
+// Utils
+var utils = require('./utils');
+var parse = utils.parse;
+var join = utils.join;
 
 
 // ---- CONVENTIONS ---- -------------------------------------------------------------------
@@ -126,7 +130,7 @@ d3.queue()
             //     .y(function(d){ return scaleY(d.value); })
             //     .curve(d3.curveStep);
 
-            draw(data, 'fatals');
+            draw(data, 'fatals', true);
             plot.selectAll('.average-line')
                 .style('stroke', 'blue');
 
@@ -173,7 +177,7 @@ d3.queue()
 
 
 // ---- DRAW FUNCTION --------------------------------------------------------------------
-function draw(rows, fact){
+function draw(rows, fact, month){
     rows.sort(function(a, b){
         return (a.date - b.date);
     });
@@ -183,12 +187,15 @@ function draw(rows, fact){
     // creating the dimension
     var dayFilter = crossfilter(rows);
     var dimDay = dayFilter.dimension(function(d) { return d.date; });
-
+    if (month) {
+       var dimDay = dayFilter.dimension(function(d) { return d.date.getMonth(); });
+    }
     // aggregating one variable
     var countDays = dimDay.group().reduceSum(function(d) { return d[fact]; });
 
     // the array
     var allDimension = countDays.top(Infinity);
+    console.log(allDimension);
     allDimension.sort(function(a, b){
         return (a.key - b.key);
     });
@@ -377,36 +384,3 @@ function drawWeather(rows) {
 
 }
 
-// ---- MISC FUNCTIONS ----
-function parse(d){
-
-    return {
-        incident: d.ST_CASE,
-        date: new Date(d.YEAR, +d.MONTH-1, d.DAY),  //fix the month offset
-        fatals: +d.FATALS,
-        drunk: +d.DRUNK_DR,
-        city: d.CITY,
-        county: d.COUNTY,
-        weather: +d.WEATHER,
-    };
-}
-
-
-function join(lookupTable, mainTable, lookupKey, mainKey, select) {
-    var l = lookupTable.length,
-        m = mainTable.length,
-        lookupIndex = [],
-        output = [];
-
-    for (var i = 0; i < l; i++) { // loop through l items
-        var row = lookupTable[i];
-        lookupIndex[row[lookupKey]] = row; // create an index for lookup table
-    }
-
-    for (var j = 0; j < m; j++) { // loop through m items
-        var y = mainTable[j];
-        var x = lookupIndex[y[mainKey]]; // get corresponding row from lookupTable
-        output.push(select(y, x)); // select only the columns you need
-    }
-    return output;
-}
