@@ -60,7 +60,6 @@ var scrollController = new ScrollMagic.Controller({
         }
     });
 
-
 // ---- QUEUE ----------------------------------------------------------------------------
 d3.queue()
     .defer(d3.csv, 'data/fars.csv',parse)
@@ -80,7 +79,6 @@ d3.queue()
         plot.append('path')
             .attr('class', 'average-line')
             .enter();
-
 
 
 // ---- SCROLL EVENTS --------------------------------------------------------------------
@@ -104,14 +102,12 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 1');
-            d3.select('.canvas').transition().style('opacity', 1);
+            d3.select('.canvas').transition().duration(1500).style('opacity', 1);
             draw(data, 'fatals'); //all the fatalities
             plot.selectAll('.average-line')
                 .style('stroke', 'orange');
             
         })
-
-        
 
         .addTo(scrollController);
 
@@ -176,6 +172,7 @@ d3.queue()
     });
 
 
+// ---- DRAW FUNCTION --------------------------------------------------------------------
 function draw(rows, fact){
     rows.sort(function(a, b){
         return (a.date - b.date);
@@ -220,6 +217,8 @@ function draw(rows, fact){
         // .style('stroke', function(array){ return scaleColor(array[0].values[0].airline); });
 }
 
+
+// ---- WEATHER FUNCTION --------------------------------------------------------------------
 function drawWeather(rows) {
 
     rows.sort(function(a, b){
