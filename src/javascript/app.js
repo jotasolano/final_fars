@@ -9,8 +9,8 @@ var parse = utils.parse;
 var join = utils.join;
 
 
-// ---- CONVENTIONS ---- -------------------------------------------------------------------
-var margin = {top:40    ,right:40   ,bottom:40 ,left:40 };
+// ---- CONVENTIONS ------------------------------------------------------------------------
+var margin = {top:40, right:40, bottom:40, left:40};
 
 var outerWidth = document.getElementById('canvas').clientWidth,
     outerHeight = document.getElementById('canvas').clientHeight;
@@ -24,8 +24,8 @@ var plot = d3.select('.canvas')
     .attr('width',outerWidth)
     .attr('height',outerHeight)
     .append('g')
-    .attr('transform','translate(' + margin.left + ',' + margin.top + ')')
-    .classed('test', true);
+    .attr('transform','translate(' + margin.left + ',' + margin.top + ')');
+    // .classed('test', true);
 
 var selectLine = plot.selectAll('.average-line');
 
@@ -38,14 +38,17 @@ var scaleColor = d3.scaleOrdinal()
     .range(['#fd6b5a','#03afeb','orange','#06ce98','blue']);
 
 var scaleY = d3.scaleLinear()
-    // .domain([0,80])
     .range([height,0]);
 
+var maxOffset = 1.1,
+    minDate = new Date(2014, 11, 25); //these provide padding for the axes
 
 //---- AXES ------------------------------------------------------------------------------
 var axisX = d3.axisBottom()
     .scale(scaleX)
+    .tickFormat(d3.timeFormat("%b"))
     .tickSize(-height);
+
 var axisY = d3.axisLeft()
     .scale(scaleY)
     .tickSize(-width);
@@ -54,12 +57,12 @@ var axisY = d3.axisLeft()
 var lineGenerator = d3.line()
     .x(function(d){ return scaleX(d.key); })
     .y(function(d){ return scaleY(d.value); })
-    .curve(d3.curveCardinal);
+    .curve(d3.curveMonotoneX);
 
 var lineGeneratorMonth = d3.line()
     .x(function(d){ return scaleX(new Date(2015, d.key-1, 1)); })
     .y(function(d){ return scaleY(d.value); })
-    .curve(d3.curveCardinal);
+    .curve(d3.curveMonotoneX);
 
 d3.select('.canvas').transition().style('opacity', 1);
 
@@ -99,13 +102,8 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 0');
-            d3.select('.canvas').classed('test', true);
+            d3.selectAll('.axis').classed('test', true);
             d3.select('.canvas').transition().style('opacity', 1);
-
-
-
-            // d3.select('.canvas').style('visibility', 'hidden');
-            // document.getElementById("scene-0").innerHTML = "Paragraph changed!";
         })
         .addTo(scrollController);
 
@@ -116,12 +114,12 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 1');
-            d3.select('.canvas').classed('test', false);
+            // d3.select('.canvas').classed('test', false);
             d3.select('.canvas').transition().duration(1500).style('opacity', 1);
             
             draw(data, 'fatals'); //all the fatalities
             plot.selectAll('.average-line')
-                .style('stroke', 'orange');
+                .style('stroke', 'B11623');
             
         })
 
@@ -135,16 +133,13 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 1-2');
-            d3.select('.canvas').transition().style('opacity', 1);
+            d3.select('.canvas').transition().duration(3000).style('opacity', 1);
 
-            // lineGenerator = d3.line()
-            //     .x(function(d){ return scaleX(d.key); })
-            //     .y(function(d){ return scaleY(d.value); })
-            //     .curve(d3.curveStep);
-
-            draw(data, 'fatals', true);
-            plot.selectAll('.average-line')
-                .style('stroke', 'blue');
+            draw(data, 'fatals', true); //fatals in monthly freq.
+            
+            // plot.selectAll('.average-line')
+            //     // .transition()
+            //     .style('stroke', 'B11623');
 
         })
         .addTo(scrollController);
@@ -157,7 +152,7 @@ d3.queue()
         .on('enter',function(){
             console.log('Enter Scene 2');
             plot.selectAll('.avg').remove();
-            draw(data, 'drunk'); //plot drunk drivers
+            draw(data, 'drunk', true); //plot drunk drivers
             plot.selectAll('.average-line')
                 .style('stroke', 'purple');
 
@@ -196,8 +191,6 @@ function draw(rows, fact, month){
 
     var getTheMonth = d3.timeFormat("%m");
 
-    var getTheMonthName = d3.timeFormat("%B");
-
     // creating the dimension
     var dayFilter = crossfilter(rows);
     var dimDay = dayFilter.dimension(function(d) { return d.date; });
@@ -221,17 +214,17 @@ function draw(rows, fact, month){
     });
 
     // redraw the axes
-    var extX = scaleX.domain( d3.extent(allDimension, function(d){ return d.key; }) );
-    var extY = scaleY.domain( d3.extent(allDimension, function(d){ return d.value; }) );
+    scaleX.domain( [minDate, d3.max(allDimension, function(d){ return d.key; })] );
+    scaleY.domain( [0, d3.max(allDimension, function(d){ return d.value; })*maxOffset] );
 
     if (month) {
         scaleX = d3.scaleTime()
-        .domain( [new Date(2015, 0, 1), new Date(2015, 11, 1)] )
+        .domain( [minDate, new Date(2015, 11, 1)] )
         .range([0,width]);
 
         axisX = d3.axisBottom()
             .scale(scaleX)
-            .tickFormat(d3.timeFormat("%B"))
+            .tickFormat(d3.timeFormat("%b"))
             .tickSize(-height);
     }
 
@@ -246,20 +239,18 @@ function draw(rows, fact, month){
     //Draw <path>
     plot.select('.average-line')
         .datum(allDimension)
-        .transition()
-        .duration(1000)
+        .transition().duration(1500)
         .attr('d', lineGenerator)
         .style('fill', 'none')
-        .style('stroke-width', '1px');
+        .style('stroke-width', '1.5px');
 
     if (month) {
         plot.select('.average-line')
             .datum(allDimension)
-            .transition()
-            .duration(1000)
+            .transition().duration(1500)
             .attr('d', lineGeneratorMonth)
             .style('fill', 'none')
-            .style('stroke-width', '1px');      
+            .style('stroke-width', '1.5px');      
     }
 }
 
@@ -378,8 +369,12 @@ function drawWeather(rows) {
     maxWeather.push(0);
 
     // redraw the axes
-    var extX = scaleX.domain( d3.extent(weaArray, function(d){ return d.key; }) );
-    var extY = scaleY.domain( d3.extent(maxWeather) );
+
+    scaleX.domain( [minDate, d3.max(weaArray, function(d){ return d.key; })] );
+    scaleY.domain( [-5, d3.max(maxWeather)*maxOffset] );
+
+    // var extX = scaleX.domain( d3.extent(weaArray, function(d){ return d.key; }) );
+    // var extY = scaleY.domain( d3.extent(maxWeather) );
 
     plot.select('.axis-x')
     .transition().duration(1500)
