@@ -25,7 +25,22 @@ body .viz-container{
 	overflow:hidden;
 	position:fixed;
 	z-index:0;
-	// background-color: #1E1E1E;
+}
+
+.fixed{
+	position: absolute;
+	bottom: 0;
+
+	h3{
+		margin-bottom-bottom: 50;
+	}
+}
+
+
+.texted{
+	position: fixed;
+	left: 80px;
+	top: 100px;
 }
 
 .intro{
@@ -37,12 +52,31 @@ body .viz-container{
 	}
 }
 
+.overview {
+	margin-top: 60px;
+	margin-left: 80px;
+
+	h2{
+		color: #B11623;
+	}
+}
+
 .viz-container .canvas{
 	width:100%;
 	height:100%;
 	overflow:hidden;
 	// background:red;
 	z-index:1;
+}
+
+.scroll{
+	position: relative;
+
+	h3{
+		position: absolute;
+		bottom:0;
+
+	}
 }
 
 /* scroll-related */

@@ -51,6 +51,7 @@ var axisX = d3.axisBottom()
 
 var axisY = d3.axisLeft()
     .scale(scaleY)
+    .ticks(6)
     .tickSize(-width);
 
 //---- GENERATORS ------------------------------------------------------------------------
@@ -102,6 +103,13 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 0');
+            draw(data, 'fatals');
+            plot.selectAll('.average-line')
+                .style('stroke', 'B11623')
+                .style('opacity', '0.6');
+
+            // d3.select('#aaa').style('display', 'none');
+
             d3.selectAll('.axis').classed('test', true);
             d3.select('.canvas').transition().style('opacity', 1);
         })
@@ -114,15 +122,18 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 1');
-            // d3.select('.canvas').classed('test', false);
-            d3.select('.canvas').transition().duration(1500).style('opacity', 1);
+            d3.selectAll('.axis').classed('test', false);
             
+            d3.select('.canvas').transition().duration(1500).style('opacity', 1);
             draw(data, 'fatals'); //all the fatalities
             plot.selectAll('.average-line')
                 .style('stroke', 'B11623');
-            
-        })
 
+            d3.select('#pin').transition().style('opacity', 0).on("end", function(d) {
+                document.getElementById("pin").innerHTML = "These are all the fatalities that ocurred in 2015";
+                d3.select('#pin').transition().style('opacity', 1);
+            });
+        })
         .addTo(scrollController);
 
 
@@ -137,9 +148,10 @@ d3.queue()
 
             draw(data, 'fatals', true); //fatals in monthly freq.
             
-            // plot.selectAll('.average-line')
-            //     // .transition()
-            //     .style('stroke', 'B11623');
+            d3.select('#pin').transition().style('opacity', 0).on("end", function(d) {
+                document.getElementById("pin").innerHTML = "August is the month with most fatalities";
+                d3.select('#pin').transition().style('opacity', 1);
+            });
 
         })
         .addTo(scrollController);
@@ -369,12 +381,8 @@ function drawWeather(rows) {
     maxWeather.push(0);
 
     // redraw the axes
-
     scaleX.domain( [minDate, d3.max(weaArray, function(d){ return d.key; })] );
     scaleY.domain( [-5, d3.max(maxWeather)*maxOffset] );
-
-    // var extX = scaleX.domain( d3.extent(weaArray, function(d){ return d.key; }) );
-    // var extY = scaleY.domain( d3.extent(maxWeather) );
 
     plot.select('.axis-x')
     .transition().duration(1500)
