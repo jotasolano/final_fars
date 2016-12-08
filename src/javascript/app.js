@@ -65,6 +65,12 @@ var lineGeneratorMonth = d3.line()
     .y(function(d){ return scaleY(d.value); })
     .curve(d3.curveMonotoneX);
 
+// transition for line generator
+var t = d3.transition()
+        .duration(4000)
+        .ease(d3.easePolyIn);
+
+
 d3.select('.canvas').transition().style('opacity', 1);
 
 
@@ -97,18 +103,27 @@ d3.queue()
 
 // ---- SCROLL EVENTS --------------------------------------------------------------------
     var scene0 = new ScrollMagic.Scene({
-            duration:document.getElementById('scene-0').clientHeight, //controlled by height of the #scene-1 <section>, as specified in CSS
+            duration:document.getElementById('scene-0').clientHeight,
             triggerElement:'#scene-0',
-            reverse:true //should the scene reverse, scrolling up?
+            reverse:true
         })
         .on('enter',function(){
             console.log('Enter Scene 0');
             draw(data, 'fatals');
+
             plot.selectAll('.average-line')
+                .attr("stroke-dasharray", function(d){ return this.getTotalLength(); })
+                .attr("stroke-dashoffset", function(d){ return this.getTotalLength(); })
                 .style('stroke', 'B11623')
                 .style('opacity', '0.6');
 
-            // d3.select('#aaa').style('display', 'none');
+            plot.selectAll(".average-line").transition(t)
+            .attr("stroke-dashoffset", 0);
+
+
+            d3.select('#pin').transition().style('opacity', 0).on('end', function(d) {
+                    d3.select('#scroller').transition().style('opacity', 1);
+                });
 
             d3.selectAll('.axis').classed('test', true);
             d3.select('.canvas').transition().style('opacity', 1);
@@ -116,9 +131,9 @@ d3.queue()
         .addTo(scrollController);
 
     var scene1 = new ScrollMagic.Scene({
-            duration:document.getElementById('scene-1').clientHeight, //controlled by height of the #scene-1 <section>, as specified in CSS
+            duration:document.getElementById('scene-1').clientHeight,
             triggerElement:'#scene-1',
-            reverse:true //should the scene reverse, scrolling up?
+            reverse:true
         })
         .on('enter',function(){
             console.log('Enter Scene 1');
@@ -129,7 +144,7 @@ d3.queue()
             plot.selectAll('.average-line')
                 .style('stroke', 'B11623');
 
-            d3.select('#pin').transition().style('opacity', 0).on("end", function(d) {
+            d3.select('#pin').transition().style('opacity', 0).on('end', function(d) {
                 document.getElementById("pin").innerHTML = "These are all the fatalities that ocurred in 2015";
                 d3.select('#pin').transition().style('opacity', 1);
             });
@@ -138,9 +153,9 @@ d3.queue()
 
 
     var scene1_2 = new ScrollMagic.Scene({
-            duration:document.getElementById('scene-1').clientHeight, //controlled by height of the #scene-1 <section>, as specified in CSS
+            duration:document.getElementById('scene-1').clientHeight,
             triggerElement:'#scene-1-2',
-            reverse:true //should the scene reverse, scrolling up?
+            reverse:true
         })
         .on('enter',function(){
             console.log('Enter Scene 1-2');
@@ -148,7 +163,7 @@ d3.queue()
 
             draw(data, 'fatals', true); //fatals in monthly freq.
             
-            d3.select('#pin').transition().style('opacity', 0).on("end", function(d) {
+            d3.select('#pin').transition().style('opacity', 0).on('end', function(d) {
                 document.getElementById("pin").innerHTML = "August is the month with most fatalities";
                 d3.select('#pin').transition().style('opacity', 1);
             });
@@ -157,9 +172,9 @@ d3.queue()
         .addTo(scrollController);
 
     var scene2 = new ScrollMagic.Scene({
-            duration:document.getElementById('scene-2').clientHeight, //controlled by height of the #scene-1 <section>, as specified in CSS
+            duration:document.getElementById('scene-2').clientHeight,
             triggerElement:'#scene-2',
-            reverse:true //should the scene reverse, scrolling up?
+            reverse:true
         })
         .on('enter',function(){
             console.log('Enter Scene 2');
@@ -173,9 +188,9 @@ d3.queue()
 
 
     var scene3 = new ScrollMagic.Scene({
-            duration:document.getElementById('scene-3').clientHeight, //controlled by height of the #scene-1 <section>, as specified in CSS
+            duration:document.getElementById('scene-3').clientHeight,
             triggerElement:'#scene-3',
-            reverse:true //should the scene reverse, scrolling up?
+            reverse:true
         })
         .on('enter',function(){
             console.log('Enter Scene 3');
@@ -248,13 +263,14 @@ function draw(rows, fact, month){
         .transition().duration(1500)
         .call(axisY);
 
-    //Draw <path>
-    plot.select('.average-line')
-        .datum(allDimension)
-        .transition().duration(1500)
-        .attr('d', lineGenerator)
-        .style('fill', 'none')
-        .style('stroke-width', '1.5px');
+    var path = plot.selectAll(".average-line")
+            .datum(allDimension);
+            
+        path.enter().append("path")
+            .merge(path)
+            .attr("d", lineGenerator)
+            .attr("fill", "none")
+            .style('stroke-width', '1.5px');
 
     if (month) {
         plot.select('.average-line')
