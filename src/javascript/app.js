@@ -21,7 +21,6 @@ var outerWidth = document.getElementById('canvas').clientWidth,
 var width = outerWidth - margin.left - margin.right,
     height = outerHeight - margin.top - margin.bottom;
 
-
 var plot = d3.select('.canvas')
     .append('svg')
     .attr('width',outerWidth)
@@ -32,13 +31,14 @@ var plot = d3.select('.canvas')
 
 var selectLine = plot.selectAll('.average-line');
 
+var c = {red: 'B11623', green:' #83a243', purple: '#9157ae', teal: '#669b90', orange: 'b95c4c'};
 
 // ---- SCALES ----------------------------------------------------------------------------
 var scaleX = d3.scaleTime()
     .range([0,width]);
 
-var scaleColor = d3.scaleOrdinal()
-    .range(['#fd6b5a','#03afeb','orange','#06ce98','blue']);
+// var scaleColor = d3.scaleOrdinal()
+//     .range(['#fd6b5a','#03afeb','orange','#06ce98','blue']);
 
 var scaleY = d3.scaleLinear()
     .range([height,0]);
@@ -118,7 +118,7 @@ d3.queue()
             plot.selectAll('.average-line')
                 .attr("stroke-dasharray", function(d){ return this.getTotalLength(); })
                 .attr("stroke-dashoffset", function(d){ return this.getTotalLength(); })
-                .style('stroke', 'B11623')
+                .style('stroke', c.red)
                 .style('opacity', '0.4');
 
             plot.selectAll(".average-line").transition(t)
@@ -145,10 +145,12 @@ d3.queue()
             d3.selectAll('.axis').classed('test', false);
             
             d3.select('.canvas').transition().duration(1500).style('opacity', 1);
-            draw(data, 'fatals'); //all the fatalities
+            
+            //draw(data, 'fatals'); //all the fatalities
+            
             plot.selectAll('.average-line')
                 .transition().duration(1500)
-                .style('stroke', 'B11623')
+                .style('stroke', c.red)
                 .style('opacity', '1');
 
             d3.select('#pin').transition().style('opacity', 0).on('end', function(d) {
@@ -170,14 +172,14 @@ d3.queue()
 
             draw(data, 'fatals', true); //fatals in monthly freq.
 
-            d3.select('.average-line')
-              .transition()
-              .duration(2000)
-              .attrTween('d', function (d) {
-                var previous = d3.select(this).attr('d');
-                var current = lineGeneratorMonth(d);    
-                return d3.interpolatePath(previous, current);
-              });
+            // d3.select('.average-line')
+            //   .transition()
+            //   .duration(2000)
+            //   .attrTween('d', function (d) {
+            //     var previous = d3.select(this).attr('d');
+            //     var current = lineGeneratorMonth(d);    
+            //     return d3.interpolatePath(previous, current);
+            //   });
             
             d3.select('#pin').transition().style('opacity', 0).on('end', function(d) {
                 document.getElementById("pin").innerHTML = "August is the month with most fatalities";
@@ -194,10 +196,15 @@ d3.queue()
         })
         .on('enter',function(){
             console.log('Enter Scene 2');
-            plot.selectAll('.avg').remove();
-            draw(data, 'drunk', true); //plot drunk drivers
+            // plot.selectAll('.avg').remove();
+
+            plot.append('path')
+                .attr('class', 'avg average-line2')
+                .enter();
+
+            draw(data, 'drunk', true);
             plot.selectAll('.average-line')
-                .style('stroke', 'purple');
+                .style('stroke', c.purple);
 
             d3.select('#pin').transition().style('opacity', 0).on('end', function(d) {
                 document.getElementById("pin").innerHTML = "These are all the incidents with drunk drivers";
@@ -223,7 +230,11 @@ d3.queue()
                 .attr('class', 'avg average-line3')
                 .enter();
 
-            drawWeather(data); //plot drunk drivers
+            plot.append('path')
+                .attr('class', 'avg average-line4')
+                .enter();
+
+            drawWeather(data); //draw all weather
 
             d3.select('#pin').transition().style('opacity', 0).on('end', function(d) {
                 document.getElementById("pin").innerHTML = "Incidents by type of weather";
@@ -250,12 +261,12 @@ function draw(rows, fact, month){
        dimDay = dayFilter.dimension(function(d) { return getTheMonth(d.date); });   
     }
 
-    // aggregating one variable
-    var countDays = dimDay.group().reduceSum(function(d) { return d[fact]; });
+    var countDays = dimDay.group().reduceSum(function(d) { return d.fatals; });
+
+    var countDaysDrunk = dimDay.group().reduceSum(function(d) { return d.drunk; });
 
     // the array
     var allDimension = countDays.top(Infinity);
-
     allDimension.sort(function(a, b){
         return (a.key - b.key);
     });
@@ -263,6 +274,16 @@ function draw(rows, fact, month){
     allDimension.forEach(function(el, i) {
         el.key = +el.key;
     });
+
+    var allDimensionDrunk = countDaysDrunk.top(Infinity);
+    allDimensionDrunk.sort(function(a, b){
+        return (a.key - b.key);
+    });
+
+    allDimensionDrunk.forEach(function(el, i) {
+        el.key = +el.key;
+    });
+
 
     // redraw the axes
     scaleX.domain( [minDate, d3.max(allDimension, function(d){ return d.key; })] );
@@ -288,9 +309,10 @@ function draw(rows, fact, month){
         .call(axisY);
 
     var path = plot.selectAll(".average-line")
-            .datum(allDimension);
+            .data([allDimension]);
             
         path.enter().append("path")
+            .attr('class', 'average-line')
             .merge(path)
             .attr("d", lineGenerator)
             .attr("fill", "none")
@@ -300,9 +322,25 @@ function draw(rows, fact, month){
         plot.select('.average-line')
             .datum(allDimension)
             .transition().duration(1500)
+            //.attr('d', lineGeneratorMonth)
+            .style('fill', 'none')
+            .style('stroke-width', '1.5px')
+            .attrTween('d', function (d) {
+            var previous = d3.select(this).attr('d');
+            var current = lineGeneratorMonth(d);    
+            return d3.interpolatePath(previous, current);
+          });
+
+
+        plot.selectAll('.average-line2')
+            .datum(allDimensionDrunk)
+            .transition()
+            .duration(1500)
             .attr('d', lineGeneratorMonth)
             .style('fill', 'none')
-            .style('stroke-width', '1.5px');      
+            .style('stroke-width', '1.5px')
+            .style('stroke', c.orange);
+   
     }
 }
 
@@ -420,6 +458,9 @@ function drawWeather(rows) {
     maxWeather.push(d3.max(weaArray, function(d) { return d.snowVal; }));
     maxWeather.push(0);
 
+    console.log(weaSleet);
+    console.log(weaSnow);
+
     // redraw the axes
     // scaleX.domain( [minDate, d3.max(weaArray, function(d){ return d.key; })] );
     scaleY.domain( [-5, d3.max(maxWeather)*maxOffset] );
@@ -450,7 +491,7 @@ function drawWeather(rows) {
         .attr('d', lineGeneratorMonth)
         .style('fill', 'none')
         .style('stroke-width', '1.5px')
-        .style('stroke', '#83a243');
+        .style('stroke', c.green);
 
     plot.selectAll('.average-line2')
         .datum(weaRain)
@@ -459,7 +500,7 @@ function drawWeather(rows) {
         .attr('d', lineGeneratorMonth)
         .style('fill', 'none')
         .style('stroke-width', '1.5px')
-        .style('stroke', '#9157ae');
+        .style('stroke', c.purple);
 
     plot.selectAll('.average-line3')
         .datum(weaSleet)
@@ -468,7 +509,16 @@ function drawWeather(rows) {
         .attr('d', lineGeneratorMonth)
         .style('fill', 'none')
         .style('stroke-width', '1.5px')
-        .style('stroke', '#669b90');
+        .style('stroke', c.teal);
+
+    plot.selectAll('.average-line4')
+        .datum(weaSnow)
+        .transition()
+        .duration(1000)
+        .attr('d', lineGeneratorMonth)
+        .style('fill', 'none')
+        .style('stroke-width', '1.5px')
+        .style('stroke', c.orange);
 
 
 }
