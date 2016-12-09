@@ -7,6 +7,7 @@
 // ------- Project ------- //
 @import "base/typography.scss";
 @import "variables";
+
 // Sections
 @import "sections/header.scss";
 @import "sections/footer.scss";
@@ -31,8 +32,9 @@ body .viz-container{
 	position: absolute;
 	bottom: 0;
 
-	h3{
+	h4{
 		margin-bottom: 50px;
+		color: #888888;
 	}
 }
 
@@ -49,6 +51,10 @@ body .viz-container{
 
 	h1{
 		font-size: 50px;
+	}
+
+	h3{
+		margin-top: 0px;
 	}
 }
 

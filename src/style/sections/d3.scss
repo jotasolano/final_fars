@@ -2,21 +2,22 @@
 	opacity: 0;
 }
 
-// .axis-x .tick{
-// 	opacity: 0.1;
-// }
-
-// .axis-y .tick{
-// 	opacity: 0.2;
-// }
-
-
-.test{
-	opacity: 0.1;
+.axisX{
+	opacity: 0.3;
 	transition: opacity 1000ms;
 }
 
-.test.normal{
+.axisX.normal{
+	opacity:1;
+	transition: opacity 1000ms;
+}
+
+.axisY{
+	opacity: 0.2;
+	transition: opacity 1000ms;
+}
+
+.axisY.normal{
 	opacity:1;
 	transition: opacity 1000ms;
 }
