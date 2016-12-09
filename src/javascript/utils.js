@@ -1,3 +1,5 @@
+var crossfilter = require('crossfilter');
+
 // ---- MISC FUNCTIONS ----
 function parse(d){
 
@@ -33,7 +35,70 @@ function join(lookupTable, mainTable, lookupKey, mainKey, select) {
     return output;
 }
 
+
+
+function fatalsData(rows, month){
+    rows.sort(function(a, b){
+        return (a.date - b.date);
+    });
+    var getTheMonth = d3.timeFormat("%m");
+
+    // creating the dimension
+    var dataFilter = crossfilter(rows);
+    var dimDate = dataFilter.dimension(function(d) { return d.date; });
+    
+    if (month) {
+       dimDate = dataFilter.dimension(function(d) { return getTheMonth(d.date); });   
+    }
+
+    var countFatal = dimDate.group().reduceSum(function(d) { return d.fatals; });
+
+    var dataArray = countFatal.top(Infinity);
+    dataArray.sort(function(a, b){
+        return (a.key - b.key);
+    });
+
+    dataArray.forEach(function(el) {
+        el.key = +el.key;
+    });
+
+    return(dataArray);
+}
+
+
+function drunksData(rows, month){
+    rows.sort(function(a, b){
+        return (a.date - b.date);
+    });
+    var getTheMonth = d3.timeFormat("%m");
+
+    // creating the dimension
+    var dataFilter = crossfilter(rows);
+    var dimDate = dataFilter.dimension(function(d) { return d.date; });
+    
+    if (month) {
+       dimDate = dataFilter.dimension(function(d) { return getTheMonth(d.date); });   
+    }
+
+    var countDrunk = dimDate.group().reduceSum(function(d) { return d.drunk; });
+
+    var dataArray = countDrunk.top(Infinity);
+    dataArray.sort(function(a, b){
+        return (a.key - b.key);
+    });
+
+    dataArray.forEach(function(el) {
+        el.key = +el.key;
+    });
+
+    return(dataArray);
+}
+
+
+
 module.exports = {
     parse: parse,
-    join: join
+    join: join,
+    fatalsData: fatalsData,
+    drunksData: drunksData
 };
