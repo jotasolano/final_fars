@@ -94,11 +94,119 @@ function drunksData(rows, month){
     return(dataArray);
 }
 
+function weatherData(rows) {
+    rows.sort(function(a, b){
+        return (a.date - b.date);
+    });
+
+    var getTheMonth = d3.timeFormat("%m");
+
+    // creating the dimensions
+    var dataFilter = crossfilter(rows);
+    var dimDate = dataFilter.dimension(function(d) { return getTheMonth(d.date); }); 
+    var dimWeather = dataFilter.dimension(function(d) { return d.weather; });
+
+    // clear sky
+    dimWeather.filter(1);
+    var group = dimDate.group();
+    var weaClear = group.reduceSum(function(d) { return d.weather; }).top(Infinity);
+    group.dispose();
+
+    weaClear.sort(function(a, b){
+        return (a.key - b.key);
+    });
+
+    dimDate.filter(null);
+    dimWeather.filter(null);
+
+    // rain 
+    dimWeather.filter(2);
+    group = dimDate.group();
+    var weaRain = group.reduceSum(function(d) { return d.weather; }).top(Infinity);
+    group.dispose();
+
+    weaRain.sort(function(a, b){
+        return (a.key.valueOf() - b.key.valueOf());
+    });
+
+    dimDate.filter(null);
+    dimWeather.filter(null);
+
+    // sleet
+    dimWeather.filter(3);
+    group = dimDate.group();
+    var weaSleet = group.reduceSum(function(d) { return d.weather; }).top(Infinity);
+    group.dispose();
+
+    weaSleet.sort(function(a, b){
+        return (a.key.valueOf() - b.key.valueOf());
+    });
+
+    dimDate.filter(null);
+    dimWeather.filter(null);
+
+    // snow
+    dimWeather.filter(4);
+    group = dimDate.group();
+    var weaSnow = group.reduceSum(function(d) { return d.weather; }).top(Infinity);
+    group.dispose();
+
+    weaSnow.sort(function(a, b){
+        return (a.key.valueOf() - b.key.valueOf());
+    });
+
+    dimDate.filter(null);
+    dimWeather.filter(null);
+
+    // join into a single array
+    var clearRain = join(weaRain, weaClear, "key", "key", function(clear, rain) {
+        return {
+            key: clear.key,
+            clearVal: clear.value,
+            rainVal: rain.value,
+        };
+    });
+    var clearRainSleet = join(weaSleet, clearRain, "key", "key", function(clearRain, sleet) {
+        return {
+            clearVal: clearRain.clearVal,
+            rainVal: clearRain.rainVal,
+            sleetVal: sleet.value,
+            key: clearRain.key
+        };
+    });
+    var weaArray = join(weaSnow, clearRainSleet, "key", "key", function(clearRainSleet, snow) {
+        return {
+            clearVal: clearRainSleet.clearVal,
+            rainVal: clearRainSleet.rainVal,
+            sleetVal: clearRainSleet.sleetVal,
+            snowVal: snow.value,
+            key: clearRainSleet.key
+        };
+    });
+
+    var maxWeather = [];
+    maxWeather.push(d3.max(weaArray, function(d) { return d.clearVal; }));
+    maxWeather.push(d3.max(weaArray, function(d) { return d.rainVal; }));
+    maxWeather.push(d3.max(weaArray, function(d) { return d.sleetVal; }));
+    maxWeather.push(d3.max(weaArray, function(d) { return d.snowVal; }));
+    maxWeather.push(0);
+
+
+    return {
+        maxWeather: maxWeather,
+        weaClear: weaClear,
+        weaRain: weaRain,
+        weaSleet: weaSleet,
+        weaSnow: weaSnow
+    };
+}
+
 
 
 module.exports = {
     parse: parse,
     join: join,
     fatalsData: fatalsData,
-    drunksData: drunksData
+    drunksData: drunksData,
+    weatherData: weatherData
 };
