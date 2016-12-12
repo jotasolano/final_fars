@@ -40,7 +40,7 @@ var c = {red: 'B11623', green:' #83a243', purple: '#9157ae', teal: '#669b90', or
 
 // ---- SCALES ----------------------------------------------------------------------------
 var scaleX = d3.scaleTime()
-    .domain( [new Date(2014, 0, 1), new Date(2016, 11, 31)] )
+    .domain( [new Date(2015, 0, 1), new Date(2015, 11, 31)] )
     .range([0,width]);
 
 var scaleY = d3.scaleLinear()
@@ -73,7 +73,7 @@ var lineGeneratorMonth = d3.line()
 
 // transition for line generator
 var t = d3.transition()
-        .duration(4000)
+        .duration(2700)
         .ease(d3.easeQuadInOut);
 
 
@@ -90,8 +90,6 @@ var scrollController = new ScrollMagic.Controller({
 d3.queue()
     .defer(d3.csv, 'data/fars.csv',parse)
     .await(function(err, data){
-
-        drawWeather(weatherData(data));
 
         //Draw axes
         plot.append('g').attr('class','axis axis-x')
@@ -179,67 +177,71 @@ d3.queue()
         })
         .addTo(scrollController);
 
-    // var scene2 = new ScrollMagic.Scene({
-    //         duration:document.getElementById('scene-2').clientHeight,
-    //         triggerElement:'#scene-2',
-    //         reverse:true
-    //     })
-    //     .on('enter',function(){
-    //         console.log('Enter Scene 2');
-    //         // plot.selectAll('.avg').remove();
+    var scene2 = new ScrollMagic.Scene({
+            duration:document.getElementById('scene-2').clientHeight,
+            triggerElement:'#scene-2',
+            reverse:true
+        })
+        .on('enter',function(){
+            console.log('Enter Scene 2');
+            // plot.selectAll('.avg').remove();
 
-    //         plot.append('path')
-    //             .attr('class', 'avg average-line2')
-    //             .enter();
+            plot.append('path')
+                .attr('class', 'avg average-line2')
+                .enter();
 
-    //         draw(data, 'drunk', true);
-    //         plot.selectAll('.average-line')
-    //             .style('stroke', c.purple);
+            // draw(data, 'drunk', true);
+            drawMonth(drunksData(data, true), true);
+            plot.selectAll('.average-line')
+                .style('stroke', c.purple);
 
-    //         d3.select('#pin').transition().style('opacity', 0).on('end', function(d) {
-    //             document.getElementById("pin").innerHTML = "These are all the incidents with drunk drivers";
-    //             d3.select('#pin').transition().style('opacity', 1);
-    //         });
+            d3.select('#pin').transition().style('opacity', 0).on('end', function(d) {
+                document.getElementById("pin").innerHTML = "These are all the incidents with drunk drivers";
+                d3.select('#pin').transition().style('opacity', 1);
+            });
 
-    //     })
-    //     .addTo(scrollController);
+        })
+        .addTo(scrollController);
 
 
-    // var scene3 = new ScrollMagic.Scene({
-    //         duration:document.getElementById('scene-3').clientHeight,
-    //         triggerElement:'#scene-3',
-    //         reverse:true
-    //     })
-    //     .on('enter',function(){
-    //         console.log('Enter Scene 3');
-    //         plot.append('path')
-    //             .attr('class', 'avg average-line2')
-    //             .enter();
+    var scene3 = new ScrollMagic.Scene({
+            duration:document.getElementById('scene-3').clientHeight,
+            triggerElement:'#scene-3',
+            reverse:true
+        })
+        .on('enter',function(){
+            console.log('Enter Scene 3');
 
-    //         plot.append('path')
-    //             .attr('class', 'avg average-line3')
-    //             .enter();
+            scaleX = d3.scaleTime()
+                .domain( [new Date(2015, 0, 1), new Date(2015, 11, 1)] )
+                .range([0,width]);
 
-    //         plot.append('path')
-    //             .attr('class', 'avg average-line4')
-    //             .enter();
+            plot.append('path')
+                .attr('class', 'avg average-line2')
+                .enter();
 
-    //         drawWeather(data); //draw all weather
+            plot.append('path')
+                .attr('class', 'avg average-line3')
+                .enter();
 
-    //         d3.select('#pin').transition().style('opacity', 0).on('end', function(d) {
-    //             document.getElementById("pin").innerHTML = "Incidents by type of weather";
-    //             d3.select('#pin').transition().style('opacity', 1);
-    //         });
+            plot.append('path')
+                .attr('class', 'avg average-line4')
+                .enter();
 
-    //     })
-    //     .addTo(scrollController);
+            drawWeather(weatherData(data));
+
+            d3.select('#pin').transition().style('opacity', 0).on('end', function(d) {
+                document.getElementById("pin").innerHTML = "Incidents by type of weather";
+                d3.select('#pin').transition().style('opacity', 1);
+            });
+
+        })
+        .addTo(scrollController);
 
 
 
     });
     
-
-
 // ---- DRAW FUNCTION --------------------------------------------------------------------
 function drawDay(arrayTest, month){
 
@@ -301,181 +303,69 @@ function drawWeather(obj) {
     console.log(test);
 }
 
-// // ---- WEATHER FUNCTION --------------------------------------------------------------------
-// function drawWeather(rows) {
-
-//     rows.sort(function(a, b){
-//         return (a.date - b.date);
-//     });
-
-//     // creating the dimensions
-//     var dayFilter = crossfilter(rows);
-//     var dimDay = dayFilter.dimension(function(d) { return getTheMonth(d.date); }); 
-//     var dimWeather = dayFilter.dimension(function(d) { return d.weather; });
-
-//     // clear sky
-//     dimWeather.filter(1);
-//     var group = dimDay.group();
-//     var weaClear = group.reduceSum(function(d) { return d.weather; }).top(Infinity);
-//     group.dispose();
-
-//     weaClear.sort(function(a, b){
-//         return (a.key - b.key);
-//     });
-
-//     dimDay.filter(null);
-//     dimWeather.filter(null);
-
-//     // rain 
-//     dimWeather.filter(2);
-//     group = dimDay.group();
-//     var weaRain = group.reduceSum(function(d) { return d.weather; }).top(Infinity);
-//     group.dispose();
-
-//     weaRain.sort(function(a, b){
-//         return (a.key.valueOf() - b.key.valueOf());
-//     });
-
-//     dimDay.filter(null);
-//     dimWeather.filter(null);
-
-//     // sleet
-//     dimWeather.filter(3);
-//     group = dimDay.group();
-//     var weaSleet = group.reduceSum(function(d) { return d.weather; }).top(Infinity);
-//     group.dispose();
-
-//     weaSleet.sort(function(a, b){
-//         return (a.key.valueOf() - b.key.valueOf());
-//     });
-
-//     dimDay.filter(null);
-//     dimWeather.filter(null);
-
-//     // snow
-//     dimWeather.filter(4);
-//     group = dimDay.group();
-//     var weaSnow = group.reduceSum(function(d) { return d.weather; }).top(Infinity);
-//     group.dispose();
-
-//     weaSnow.sort(function(a, b){
-//         return (a.key.valueOf() - b.key.valueOf());
-//     });
-
-//     dimDay.filter(null);
-//     dimWeather.filter(null);
-
-//     // join into a single array
-//     var clearRain = join(weaRain, weaClear, "key", "key", function(clear, rain) {
-//         return {
-//             key: clear.key,
-//             clearVal: clear.value,
-//             rainVal: rain.value,
-//         };
-//     });
-
-//     var clearRainSleet = join(weaSleet, clearRain, "key", "key", function(clearRain, sleet) {
-//         return {
-//             clearVal: clearRain.clearVal,
-//             rainVal: clearRain.rainVal,
-//             sleetVal: sleet.value,
-//             key: clearRain.key
-//         };
-//     });
-
-//     var weaArray = join(weaSnow, clearRainSleet, "key", "key", function(clearRainSleet, snow) {
-//         return {
-//             clearVal: clearRainSleet.clearVal,
-//             rainVal: clearRainSleet.rainVal,
-//             sleetVal: clearRainSleet.sleetVal,
-//             snowVal: snow.value,
-//             key: clearRainSleet.key
-//         };
-//     });
-
-//     var weaArray2 = join(weaSnow, clearRainSleet, "key", "key", function(clearRainSleet, snow) {
-//         return {
-//             value: [{
-//             as: clearRainSleet.clearVal,
-//             bes:clearRainSleet.rainVal,
-//             des: clearRainSleet.sleetVal,
-//             ces: snow.value,
-//             }
-//             ],
-
-//             key: clearRainSleet.key
-//         };
-//     });
-
-//     var maxWeather = [];
-//     maxWeather.push(d3.max(weaArray, function(d) { return d.clearVal; }));
-//     maxWeather.push(d3.max(weaArray, function(d) { return d.rainVal; }));
-//     maxWeather.push(d3.max(weaArray, function(d) { return d.sleetVal; }));
-//     maxWeather.push(d3.max(weaArray, function(d) { return d.snowVal; }));
-//     maxWeather.push(0);
-
-//     console.log(weaSleet);
-//     console.log(weaSnow);
-
-//     // redraw the axes
-//     // scaleX.domain( [minDate, d3.max(weaArray, function(d){ return d.key; })] );
-//     scaleY.domain( [-5, d3.max(maxWeather)*maxOffset] );
+// ---- WEATHER FUNCTION --------------------------------------------------------------------
+function drawWeather(obj) {
+    var weaClear    = obj.weaClear,
+        weaRain     = obj.weaRain,
+        weaSleet    = obj.weaSleet,
+        weaSnow     = obj.weaSnow,
+        maxWeather  = obj.maxWeather;
 
 
-//     scaleX = d3.scaleTime()
-//         .domain( [minDate, new Date(2015, 11, 1)] )
-//         .range([0,width]);
-
-//     axisX = d3.axisBottom()
-//         .scale(scaleX)
-//         .tickFormat(d3.timeFormat("%b"))
-//         .tickSize(-height);
-
-//     plot.select('.axis-x')
-//     .transition().duration(1500)
-//         .call(axisX);
-
-//     plot.select('.axis-y')
-//         .transition().duration(1500)
-//         .call(axisY);
-
-//     //Draw <path>
-//     plot.selectAll('.average-line')
-//         .datum(weaClear)
-//         .transition()
-//         .duration(1000)
-//         .attr('d', lineGeneratorMonth)
-//         .style('fill', 'none')
-//         .style('stroke-width', '1.5px')
-//         .style('stroke', c.green);
-
-//     plot.selectAll('.average-line2')
-//         .datum(weaRain)
-//         .transition()
-//         .duration(1000)
-//         .attr('d', lineGeneratorMonth)
-//         .style('fill', 'none')
-//         .style('stroke-width', '1.5px')
-//         .style('stroke', c.purple);
-
-//     plot.selectAll('.average-line3')
-//         .datum(weaSleet)
-//         .transition()
-//         .duration(1000)
-//         .attr('d', lineGeneratorMonth)
-//         .style('fill', 'none')
-//         .style('stroke-width', '1.5px')
-//         .style('stroke', c.teal);
-
-//     plot.selectAll('.average-line4')
-//         .datum(weaSnow)
-//         .transition()
-//         .duration(1000)
-//         .attr('d', lineGeneratorMonth)
-//         .style('fill', 'none')
-//         .style('stroke-width', '1.5px')
-//         .style('stroke', c.orange);
+    scaleY.domain( [-5, d3.max(maxWeather)*maxOffset] );
 
 
-// }
+    // scaleX = d3.scaleTime()
+    //     .domain( [new Date(2015, 0, 1), new Date(2015, 11, 1)] );
+    //     // .range([0,width]);
+
+    axisX = d3.axisBottom()
+        .scale(scaleX)
+        .tickFormat(d3.timeFormat("%b"))
+        .tickSize(-height);
+
+    plot.select('.axis-x')
+    .transition().duration(1500)
+        .call(axisX);
+
+    plot.select('.axis-y')
+        .transition().duration(1500)
+        .call(axisY);
+
+    plot.selectAll('.average-line')
+        .datum(weaClear)
+        .transition()
+        .duration(1000)
+        .attr('d', lineGeneratorMonth)
+        .style('fill', 'none')
+        .style('stroke-width', '1.5px')
+        .style('stroke', c.green);
+
+    plot.selectAll('.average-line2')
+        .datum(weaRain)
+        .transition()
+        .duration(1000)
+        .attr('d', lineGeneratorMonth)
+        .style('fill', 'none')
+        .style('stroke-width', '1.5px')
+        .style('stroke', c.purple);
+
+    plot.selectAll('.average-line3')
+        .datum(weaSleet)
+        .transition()
+        .duration(1000)
+        .attr('d', lineGeneratorMonth)
+        .style('fill', 'none')
+        .style('stroke-width', '1.5px')
+        .style('stroke', c.teal);
+
+    plot.selectAll('.average-line4')
+        .datum(weaSnow)
+        .transition()
+        .duration(1000)
+        .attr('d', lineGeneratorMonth)
+        .style('fill', 'none')
+        .style('stroke-width', '1.5px')
+        .style('stroke', c.orange);
+}
 
