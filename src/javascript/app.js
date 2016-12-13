@@ -36,7 +36,10 @@ var plot = d3.select('.canvas')
 
 var selectLine = plot.selectAll('.average-line');
 
-var c = {red: 'B11623', green:' #83a243', purple: '#9157ae', teal: '#669b90', orange: 'b95c4c'};
+var c = {red: 'B11623', green:' #83a243', purple: '#9157ae', teal: '#669b90', orange: 'b95c4c',
+        key: function(n) {
+                return this[Object.keys(this)[n]];
+            }};
 
 // ---- SCALES ----------------------------------------------------------------------------
 var scaleX = d3.scaleTime()
@@ -73,7 +76,7 @@ var lineGeneratorMonth = d3.line()
 
 // transition for line generator
 var t = d3.transition()
-        .duration(2700)
+        .duration(3200)
         .ease(d3.easeQuadInOut);
 
 
@@ -119,10 +122,16 @@ d3.queue()
                 .style('stroke', c.red)
                 .style('opacity', '0.4');
 
+            // plot.selectAll('.average-line').transition()
+
             plot.selectAll(".average-line").transition(t)
-                .attr("stroke-dashoffset", 0);
+                .attr("stroke-dashoffset", 0)
+                .on('end', function(d) {
+                    d3.select('.commentary').transition().duration(1500).style('opacity', 1);
+                });
 
             d3.select('#pin').transition().style('opacity', 0);
+
             d3.select('#pin').transition().style('opacity', 0).on('end', function(d) {
                     d3.select('#scroller').transition().style('opacity', 1);
                 });
@@ -311,13 +320,9 @@ function drawWeather(obj) {
         weaSnow     = obj.weaSnow,
         maxWeather  = obj.maxWeather;
 
-
+    var weathers = [weaClear, weaRain, weaSleet, weaSnow];
     scaleY.domain( [-5, d3.max(maxWeather)*maxOffset] );
 
-
-    // scaleX = d3.scaleTime()
-    //     .domain( [new Date(2015, 0, 1), new Date(2015, 11, 1)] );
-    //     // .range([0,width]);
 
     axisX = d3.axisBottom()
         .scale(scaleX)
@@ -332,40 +337,63 @@ function drawWeather(obj) {
         .transition().duration(1500)
         .call(axisY);
 
-    plot.selectAll('.average-line')
-        .datum(weaClear)
-        .transition()
-        .duration(1000)
-        .attr('d', lineGeneratorMonth)
-        .style('fill', 'none')
-        .style('stroke-width', '1.5px')
-        .style('stroke', c.green);
 
-    plot.selectAll('.average-line2')
-        .datum(weaRain)
-        .transition()
-        .duration(1000)
-        .attr('d', lineGeneratorMonth)
-        .style('fill', 'none')
-        .style('stroke-width', '1.5px')
-        .style('stroke', c.purple);
+    // for (var i = 0; i < weathers.length; i++) {
+        plot.selectAll('.average-line')
+            .data(weathers)
+            .enter().append('path')
+            .attr("class", 'i')
+            .transition().duration(1500)
+            .transition()
+            .duration(1000)
+            .attr('d', lineGeneratorMonth)
+            .style('fill', 'none')
+            .style('stroke-width', '1.5px')
+            .style('stroke', function(d, i) { console.log(c.key[i]); });
+    // }
 
-    plot.selectAll('.average-line3')
-        .datum(weaSleet)
-        .transition()
-        .duration(1000)
-        .attr('d', lineGeneratorMonth)
-        .style('fill', 'none')
-        .style('stroke-width', '1.5px')
-        .style('stroke', c.teal);
+    // plot.selectAll('.average-line')
+    //     .datum(weaClear)
+    //     .transition()
+    //     .duration(1000)
+    //     .attr('d', lineGeneratorMonth)
+    //     .style('fill', 'none')
+    //     .style('stroke-width', '1.5px')
+    //     .style('stroke', c.green);
 
-    plot.selectAll('.average-line4')
-        .datum(weaSnow)
-        .transition()
-        .duration(1000)
-        .attr('d', lineGeneratorMonth)
-        .style('fill', 'none')
-        .style('stroke-width', '1.5px')
-        .style('stroke', c.orange);
+    // plot.selectAll('.average-line2')
+    //     .datum(weaRain)
+    //     .transition()
+    //     .duration(1000)
+    //     .attr('d', lineGeneratorMonth)
+    //     .style('fill', 'none')
+    //     .style('stroke-width', '1.5px')
+    //     .style('stroke', c.purple);
+
+    // plot.selectAll('.average-line3')
+    //     .datum(weaSleet)
+    //     .transition()
+    //     .duration(1000)
+    //     .attr('d', lineGeneratorMonth)
+    //     .style('fill', 'none')
+    //     .style('stroke-width', '1.5px')
+    //     .style('stroke', c.teal);
+
+    // plot.selectAll('.average-line4')
+    //     .datum(weaSnow)
+    //     .transition()
+    //     .duration(1000)
+    //     .attr('d', lineGeneratorMonth)
+    //     .style('fill', 'none')
+    //     .style('stroke-width', '1.5px')
+    //     .style('stroke', c.orange);
+
+    var myText =  plot.append("text")
+       .attr("y", 200)//magic number here
+       .attr("x", 60)
+       .attr('text-anchor', 'middle')
+       .attr("class", "myLabel")//easy to style with CSS
+       .text("I'm a label");
+
 }
 
