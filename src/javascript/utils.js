@@ -202,7 +202,6 @@ function weatherData(rows) {
 }
 
 
-
 module.exports = {
     parse: parse,
     join: join,

@@ -28,22 +28,30 @@ body .viz-container{
 	z-index:0;
 }
 
+#scene-0 {
+	.commentary{
+		opacity: 0;
+	}
+}
+
 .commentary{
 	// opacity: 0;
 	// position: absolute;
 	// bottom: 0;
+	// border-left-color: #B11623;
+	// border-left-style: solid;
 	margin-bottom: 150px;
 	height: 150px;
 	display: flex;
   	justify-content: center;
   	flex-direction: column;
-  	background: rgba(255, 255, 255, 0.8);
+  	background: rgba(255, 255, 255, 0.9);
   	-webkit-box-shadow: 0px 3px 5px 0px rgba(168,168,168,1);
 	-moz-box-shadow: 0px 3px 5px 0px rgba(168,168,168,1);
 	box-shadow: 0px 3px 5px 0px rgba(168,168,168,1);
 
 	h4{
-		color: #666;
+		color: #202020;
 		vertical-align: middle;
 		line-height: 2;
 	}
@@ -51,6 +59,14 @@ body .viz-container{
 	strong{
 		color: #B11623;
 	}
+}
+
+#drunk-label{
+
+	strong:nth-child(1){
+		color: #669b90;
+	}
+
 }
 
 
