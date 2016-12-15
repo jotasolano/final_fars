@@ -9,4 +9,4 @@ To run on local server:
 `npm run watch`
 
 
-Source files are found on the *build* folder
+Source files are found on the **src** folder
