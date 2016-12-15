@@ -164,6 +164,9 @@ d3.queue()
             reverse:true
         })
         .on('enter',function(){
+            d3.selectAll('.txLabel').remove();
+            d3.selectAll('.average-line2').remove();
+
             scaleX = d3.scaleTime()
                 .domain( [new Date(2015, 0, 1), new Date(2015, 11, 1)] )
                 .range([0,width]);
@@ -171,7 +174,6 @@ d3.queue()
             d3.select('.canvas').transition().duration(3000).style('opacity', 1);
 
             drawMonth(fatalsData(data, true), drunksData(data, true)); //fatals in monthly freq.
-            // d3.selectAll('.txLabel').style('opacity', 0);
             plot.selectAll('.average-line').style('stroke', c.red);
 
         })
@@ -183,26 +185,29 @@ d3.queue()
             reverse:true
         })
         .on('enter',function(){
-
-            var txDrunk =  plot.append("text")
-               .attr('y', function(d) { return scaleY(440); })
-               .attr('x', function(d) { return scaleX(new Date(2015, 7, 4)); })
-               .attr('text-anchor', 'left')
-               .attr('class', 'txLabel')
-               .text('Incidents involving drunk people')
-               .style('opacity', 0);
+            d3.selectAll('.txLabel').remove();
+            d3.selectAll('.avg').remove();
 
             plot.append('path')
                 .attr('class', 'avg average-line2')
                 .enter();
 
             drawMonth(fatalsData(data, true), drunksData(data, true));
-               
-            d3.select('.average-line2').transition().on('start', function(d) {
-                console.log('testing');
-                d3.select('.txLabel').transition().duration(2000).style('opacity', 1);
-            });
+
+            var txDrunk =  plot.append("text")
+               .attr('y', function(d) { return scaleY(440); })
+               .attr('x', function(d) { return scaleX(new Date(2015, 7, 9)); })
+               .attr('text-anchor', 'left')
+               .attr('class', 'txLabel')
+               .text('Incidents involving drunk people')
+               .style('opacity', 0);
+
+            d3.select('.txLabel').transition()
+            .delay(1500)
+            .duration(2000)
+            .style('opacity', 1);
         })
+
         .addTo(scrollController);
 
 
@@ -212,6 +217,9 @@ d3.queue()
             reverse:true
         })
         .on('enter',function(){
+            d3.selectAll('.txLabel').remove();
+            // d3.selectAll('.avg').remove();
+
             scaleX = d3.scaleTime()
                 .domain( [new Date(2015, 0, 1), new Date(2015, 11, 1)] )
                 .range([0,width]);
@@ -226,21 +234,24 @@ d3.queue()
 
             drawWeather(weatherData(data));
 
-            d3.selectAll('.txLabel').style('opacity', 0);
-            d3.select('.average-line4').transition().on('end', function(d) {
-                d3.selectAll('.txLabel').transition().duration(2000).style('opacity', 1);
-            });
+            d3.selectAll('.txLabel').transition()
+            .delay(1500)
+            .duration(2000)
+            .style('opacity', 1);
+
+            // d3.select('.average-line4').transition().on('end', function(d) {
+            //     d3.selectAll('.txLabel').transition().duration(2000).style('opacity', 1);
+            // });
         })
         .addTo(scrollController);
     });
     
 // ---- DRAW FUNCTIONS --------------------------------------------------------------------
 function drawDay(arrayTest, month){
-
     scaleY.domain( [0, d3.max(arrayTest, function(d){ return d.value; })*maxOffset] );
 
     plot.select('.axis-x')
-    .transition().duration(1500)
+        .transition().duration(1500)
         .call(axisX);
 
     plot.select('.axis-y')
@@ -377,6 +388,7 @@ function drawWeather(obj) {
        .attr('x', function(d) { return scaleX(new Date(2015, 0, 1))+30; })
        .attr('text-anchor', 'left')
        .attr('class', 'txLabel')
+       .style('opacity', 0)
        .text('Clear');
 
     var txRain =  plot.append("text")
@@ -384,6 +396,7 @@ function drawWeather(obj) {
        .attr('x', function(d) { return scaleX(new Date(2015, 5, 12)); })
        .attr('text-anchor', 'left')
        .attr('class', 'txLabel')
+       .style('opacity', 0)
        .text('Rain');
 
     var txSleet =  plot.append("text")
@@ -391,6 +404,7 @@ function drawWeather(obj) {
        .attr('x', function(d) { return scaleX(new Date(2015, 0, 7)); })
        .attr('text-anchor', 'left')
        .attr('class', 'txLabel')
+       .style('opacity', 0)
        .text('Sleet');
 
     var txSnow =  plot.append("text")
@@ -398,6 +412,7 @@ function drawWeather(obj) {
        .attr('x', function(d) { return scaleX(new Date(2015, 0, 15)); })
        .attr('text-anchor', 'left')
        .attr('class', 'txLabel')
+       .style('opacity', 0)
        .text('Snow');
 }
 
