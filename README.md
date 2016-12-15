@@ -7,3 +7,6 @@ To run, please clone or fork then:
 To run on local server:
 
 `npm run watch`
+
+
+Source files are found on the *build* folder
